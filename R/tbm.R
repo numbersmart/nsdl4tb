@@ -88,6 +88,7 @@ tbm_modelar_ingreso <- function(cortes, venta){
     select(c(FechaCorte, VentaTotal, Venta, Separados)) %>%
     mutate(Venta = ifelse(is.na(Venta), 0, Venta),
            Separados = ifelse(is.na(Separados), 0, Separados)) %>%
-    mutate(Otros = VentaTotal-Venta-Separados)
+    mutate(Otros = VentaTotal-Venta-Separados) %>%
+    group_by(FechaCorte) %>% summarise_each(funs(mean(.)))
   d
 }

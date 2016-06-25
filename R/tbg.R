@@ -80,6 +80,10 @@ tbg_hc_fisico_unit <- function(data, tipo){
     hc_plotOptions(series = list(stacking = "normal"))
   hc
 }
-
+#' Funciones para graficar
+#'
+#' Colores
+#' @export
+colores_nsdl4tb <- c("#521421", "#70592d", "#556b2f", "#bedcb6", "#d5c8b8", "#f29576")
 
 
