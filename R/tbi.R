@@ -23,6 +23,25 @@ tbi_importar <- function(db, l){
                           cat_metales = m_met,
                           cat_fam = m_fam,
                           logs = m_log)
+    }
+  if(db == "ventas"){
+    s <- tbi_h_escogerlocal(l)
+    #archivo <- paste0(s, "Sistema/DATOS2/ADTISE00.DBF")
+    archivo <- paste0(s, "Sistema/DATOS2/ADTIMA00.DBF")
+    inventarios <- paste0(s, "Sistema/DATOS2/ACARTI00.DBF")
+    m_fam <- paste0(s, "Sistema/DATOS2/ACGRUP00.DBF")
+    m_met <- paste0(s, "Sistema/DATOS2/ACMATE00.DBF")
+    tickets <- paste0(s, "Sistema/DATOS2/ADMOCL00.DBF")
+    m_log <- paste0(s, "Sistema/DATOS2/ADMOIN00.DBF")
+
+    print(paste0(" >> Usando: tbi_importer_ticks en local: ", l))
+
+    d <- tbi_importer_ticks(archivo = archivo,
+                            ticks = tickets,
+                            logs = m_log,
+                            inventarios = inventarios,
+                          cat_metales = m_met,
+                          cat_fam = m_fam)
   }
 return(d)
 }
@@ -180,7 +199,111 @@ tbi_importer_inv <- function(archivo, cat_metales, cat_fam, logs){
                    "VENTAS" = ventas_dias)
   return(list_inv)
 }
+#' Funciones para inicializar
+#'
+#' Importar y unir, con catalogo, ventas
+#' @param archivo archivo de inventario
+#' @param cat_metales archivo de catalogo de metales
+#' @param cat_fam archivo de catalogo de familias
+#' @import foreign
+#' @import magrittr
+#' @import reshape2
+#' @import dplyr
+#' @import stringi
+#' @export
+tbi_importer_ticks <- function(archivo,
+                               inventarios,
+                               ticks,
+                               logs,
+                               cat_metales,
+                               cat_fam){
+  # headers de tickets
+  v_headers <- foreign::read.dbf(file = archivo, as.is = TRUE)
+  names(v_headers) <- c("PARTIDA", "V1", "V2", "V3", "FECHA_CORTE",
+                "VENDEDOR", paste0("V", 5:12), "FECHA_REAL", "V13",
+                "V14", "TIMESTAMP", "SUBTOTAL", "IVA", "IMPORTE",
+                "V15", "V16", "V17", "V18", "DESC_NOTA_CLIENTE",
+                "FORMA_PAGO", "TIPO_PAGO_GPO", "TOTALPARTIDA",
+                "NO_ABONO_NS", "V19", "V20", "NS2", "TOTAL_NS",
+                "TIPO_TICKET", "RUTA_ORDEN", "NUM_SEP",
+                paste0("V", 21:28))
+  v_headers %<>% select(PARTIDA, FECHA_CORTE, VENDEDOR, FECHA_REAL,
+                      TIMESTAMP, SUBTOTAL, IVA, IMPORTE, DESC_NOTA_CLIENTE,
+                      FORMA_PAGO, TIPO_PAGO_GPO, TOTALPARTIDA, TIPO_TICKET,
+                      RUTA_ORDEN, NUM_SEP)
 
+  # tickets sin inv
+  v_ticks <- foreign::read.dbf(ticks, as.is = TRUE)
+  names(v_ticks) <- c("V1", "FECHA1", "FECHA2", "ID_MOV",
+                      "TIPO_MOV_ID", "VALOR", "INGRESO",
+                      "V2", "V3", "VENDEDOR_TCKS", "ID_MOV_2",
+                      "V4", "ID_MOV_3", "DESC_MOV_NOTA", "ID_MOV_4",
+                      "ID_MOV_5", "ID_MOV_6", "TIPO_INGRESO", "V5",
+                      "V6", "FECHA_VENCESEP", paste0("V", 7:16))
+  v_ticks %<>% filter(TIPO_INGRESO == "VENTAS")
+
+  # caracteristicas de inventarios...
+  inv <- foreign::read.dbf(file = inventarios, as.is = TRUE)
+  names(inv) <- c("ID", "PROV", "MODELO", "DESC", "GRAMO",
+                 "FAM", "METAL", "V1", "COSTO_OFICIAL", "PRECIO",
+                 "V2", "V3", "V4", "V5", "V6", "V7", "V8",
+                 "V9", "V10", "V11", "V12", "V13", "FECHA_ALTA",
+                 "V14", "V15", "V16", "LINEA", "V17",
+                 "V18", "V19", "V20","V21","V22",
+                 "V23","V24","V25","V26","V27","V28","V29",
+                 "V30","V31","V32")
+  inv %<>% dplyr::select(c(ID, PROV, MODELO,
+                           DESC, GRAMO, FAM, METAL,
+                           COSTO_OFICIAL, PRECIO,
+                           FECHA_ALTA, LINEA))
+
+  # familia
+  fam <- foreign::read.dbf(file = cat_fam, as.is = TRUE)
+  names(fam) <- c("ID_FAM", "DESC_FAM", "GRUPO_FAM_ORIGEN",
+                  paste0("V", 1:8))
+  fam %<>% dplyr::select(c(ID_FAM, DESC_FAM))
+
+  # metal
+  met <- foreign::read.dbf(file = cat_metales, as.is = TRUE)
+  names(met) <- c("MET", "DESC_MET", "ABR_MET", paste0("V", 1:8))
+  met %<>% dplyr::select(c(MET, DESC_MET))
+
+  # movimientos
+  movs <- foreign::read.dbf(file = logs, as.is = TRUE)
+  names(movs) <- c("ID", "ID_TIPO_MOV", "MOVIMIENTO",
+                   "FUENTE_MOV", "TIPO_SALIDA", "COSTO",
+                   "V3", "ID_NS", "V5", "ID_MOV",
+                   "FECHA", "V6", "V7", "VALOR_MOV",
+                   "V9", "V10", "VENDEDOR", "DESC_MOV",
+                   "V12", "FECHA2", paste0("V",14:24))
+  movs %<>% dplyr::select(c(ID_MOV, FECHA, ID, ID_TIPO_MOV,
+                            MOVIMIENTO,FUENTE_MOV,
+                            TIPO_SALIDA, ID_NS, VENDEDOR,
+                            DESC_MOV, COSTO, VALOR_MOV))
+  # solo ventas
+  movs %<>% dplyr::filter(MOVIMIENTO == "VENTA") %>%
+    mutate("MARGEN" = VALOR_MOV / COSTO)
+
+  # preparar - agregar los catalogos a las ventas...
+  movs %<>%
+  left_join(., inv, by = c("ID" = "ID")) %>%
+  left_join(., fam, by = c("FAM" = "ID_FAM")) %>%
+    left_join(., met, by = c("METAL" = "MET")) %>%
+    mutate("DIAS_DESDE" = difftime(as.Date(FECHA), as.Date(FECHA_ALTA), units = "d")) %>%
+    mutate("DIAS_NUM" = as.numeric(DIAS_DESDE)) %>%
+    mutate("METAL_GRUPO" = ifelse(METAL == "PLA", "PLATA",
+                                  ifelse(substr(METAL, 1,2) %in% c("OA","OB","OC","OF", "AB"), "ORO",
+                                         "OTRO")))
+  movs$KILATAJE <- ifelse(stringi::stri_extract(str = movs$METAL, regex = "[0-9]$") == "4", "14K",
+                          ifelse(stringi::stri_extract(str = movs$METAL, regex = "[0-9]$")== "0", "10k",
+                                 ifelse(stringi::stri_extract(str = movs$METAL, regex = "[0-9]$")=="8", "18k", "Otro")
+                                 ))
+  movs %<>% left_join(., v_ticks, by = c("ID_MOV" = "ID_MOV"))
+
+
+  list_exp <- list("HEADERS" = v_headers,
+                   "VENTAS_REAL" = movs)
+}
 #' Funciones para inicializar
 #'
 #' Retorna string de path a archivos, dependiendo el local
