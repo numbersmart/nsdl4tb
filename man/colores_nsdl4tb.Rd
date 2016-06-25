@@ -4,7 +4,7 @@
 \name{colores_nsdl4tb}
 \alias{colores_nsdl4tb}
 \title{Funciones para graficar}
-\format{An object of class \code{character} of length 6.}
+\format{An object of class \code{character} of length 56.}
 \usage{
 colores_nsdl4tb
 }
