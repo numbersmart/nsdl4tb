@@ -16,6 +16,6 @@ tbi_h_renombrar(df, columnas, tipo = "pre", char)
 \item{char}{caracteres a poner antes o después}
 }
 \description{
-Retorna string de path a archivos, dependiendo el local
+Renombra una serie de columnas, manteniendo el nombre original
 }
 
