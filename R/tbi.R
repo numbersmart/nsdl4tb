@@ -348,10 +348,3 @@ tbi_h_renombrar <- function(df, columnas, tipo = "pre", char){
   names(df)[columnas] <- s_n
   return(df)
 }
-
-
-
-
-
-setwd("/Users/eduardoflores/Documents/Dropbox/Sistema/DATOS2")
-a <- read.bdf("ACARTI00.DBF")
