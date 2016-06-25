@@ -282,7 +282,7 @@ tbi_importer_ticks <- function(archivo,
                             DESC_MOV, COSTO, VALOR_MOV))
   # solo ventas
   movs %<>% dplyr::filter(MOVIMIENTO == "VENTA") %>%
-    mutate("MARGEN" = VALOR_MOV / COSTO)
+    mutate("MARGEN" = VALOR_MOV / COSTO_OFICIAL)
 
   # preparar - agregar los catalogos a las ventas...
   movs %<>%
@@ -323,6 +323,26 @@ tbi_h_escogerlocal <- function(l){
     }
   }
   return(s)
+}
+#' Funciones para inicializar
+#'
+#' Importar y unir, con catalogo, ventas
+#' @param archivo archivo de inventario
+#' @param cat_metales archivo de catalogo de metales
+#' @param cat_fam archivo de catalogo de familias
+#' @import foreign
+#' @import magrittr
+#' @import reshape2
+#' @import dplyr
+#' @import stringi
+#' @export
+tbi_importer_seps <- function(archivo,
+                               inventarios,
+                               ticks,
+                               logs,
+                               cat_metales,
+                               cat_fam){
+
 }
 #' Funciones para inicializar
 #'
