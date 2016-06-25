@@ -65,7 +65,7 @@ tbm_limpiar_ventas <- function(venta){
                      TIPO_SALIDA, VENDEDOR, DESC_MOV, COSTO, VALOR_MOV,
                      MARGEN, PROV, DESC, COSTO_OFICIAL, PRECIO, FECHA_ALTA,
                      LINEA, DESC_FAM, DESC_MET, DIAS_NUM, METAL_GRUPO, KILATAJE,
-                     VALOR, INGRESO, TIPO_INGRESO, VENCESEP))
+                     VALOR, INGRESO, TIPO_INGRESO, FECHA_VENCESEP))
 }
 #' Funciones para manipular
 #'
@@ -89,6 +89,7 @@ tbm_modelar_ingreso <- function(cortes, venta){
     mutate(Venta = ifelse(is.na(Venta), 0, Venta),
            Separados = ifelse(is.na(Separados), 0, Separados)) %>%
     mutate(Otros = VentaTotal-Venta-Separados) %>%
-    group_by(FechaCorte) %>% summarise_each(funs(mean(.)))
+    group_by(FechaCorte) %>% summarise_each(funs(mean(.))) %>%
+    mutate(Otros = ifelse(Otros<0, 0, Otros))
   d
 }

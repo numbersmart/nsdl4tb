@@ -8,26 +8,6 @@
 #' @export
 tbg_hc_pagos <- function(data, tipo){
 
-  hc_tidy <- function(hc, data,
-                      group,
-                      nombres,
-                      values, ...){
-
-    arguments <- as.list(match.call())
-    cats <- eval(arguments$group, data)
-
-    n <- length(unique(as.character(cats)))
-    if (n > 0) {
-      for (i in 1:n) {
-        nm <- as.character(unique(cats)[i])
-        dat <- eval(arguments$values, data)
-        dat <- dat[cats == nm]
-        hc <- hc_add_series(hc, name = nombres[i], data = dat, ...)
-      }
-    }
-    hc
-  }
-
   hc <- highchart() %>%
     hc_tidy(data = data,
             group = FormaPago,
@@ -84,6 +64,28 @@ tbg_hc_fisico_unit <- function(data, tipo){
 #'
 #' Colores
 #' @export
-colores_nsdl4tb <- c("#521421", "#70592d", "#556b2f", "#bedcb6", "#d5c8b8", "#f29576")
+colores_nsdl4tb <- c("#521421", "#70592d", "#556b2f", "#bedcb6", "#d5c8b8",
+                     "#f29576", terrain.colors(50))
+#' Funciones para graficar
+#'
+#' Tidy graph
+#' @export
+hc_tidy <- function(hc, data,
+                    group,
+                    nombres,
+                    values, ...){
 
+  arguments <- as.list(match.call())
+  cats <- eval(arguments$group, data)
 
+  n <- length(unique(as.character(cats)))
+  if (n > 0) {
+    for (i in 1:n) {
+      nm <- as.character(unique(cats)[i])
+      dat <- eval(arguments$values, data)
+      dat <- dat[cats == nm]
+      hc <- hc_add_series(hc, name = nombres[i], data = dat, ...)
+    }
+  }
+  hc
+}
