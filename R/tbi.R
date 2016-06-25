@@ -281,8 +281,7 @@ tbi_importer_ticks <- function(archivo,
                             TIPO_SALIDA, ID_NS, VENDEDOR,
                             DESC_MOV, COSTO, VALOR_MOV))
   # solo ventas
-  movs %<>% dplyr::filter(MOVIMIENTO == "VENTA") %>%
-    mutate("MARGEN" = VALOR_MOV / COSTO_OFICIAL)
+  movs %<>% dplyr::filter(MOVIMIENTO == "VENTA")
 
   # preparar - agregar los catalogos a las ventas...
   movs %<>%
@@ -298,7 +297,8 @@ tbi_importer_ticks <- function(archivo,
                           ifelse(stringi::stri_extract(str = movs$METAL, regex = "[0-9]$")== "0", "10k",
                                  ifelse(stringi::stri_extract(str = movs$METAL, regex = "[0-9]$")=="8", "18k", "Otro")
                                  ))
-  movs %<>% left_join(., v_ticks, by = c("ID_MOV" = "ID_MOV"))
+  movs %<>% left_join(., v_ticks, by = c("ID_MOV" = "ID_MOV")) %>%
+    mutate("MARGEN" = VALOR_MOV / COSTO_OFICIAL)
 
 
   list_exp <- list("HEADERS" = v_headers,
