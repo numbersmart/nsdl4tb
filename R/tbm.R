@@ -75,13 +75,14 @@ tbm_limpiar_ventas <- function(venta){
 #' @import dplyr
 #' @export
 tbm_modelar_ingreso <- function(cortes, venta){
-  venta <- venta %>% mutate(SEPARADO = ifelse(is.na(NUM_SEP), 1, 0)) %>%
+  venta <- venta %>%
+    mutate(SEPARADO = ifelse(is.na(NUM_SEP), 1, 0)) %>%
     group_by(FECHA_CORTE, SEPARADO) %>%
     summarise(INGRESO = sum(IMPORTE)) %>%
     tidyr::spread(key = SEPARADO,
                   value = INGRESO)
 
-  names(venta) <- c("FechaCorte", "Venta", "Separados")
+  names(venta) <- c("FechaCorte", "Separados", "Venta")
 
   d <- cortes %>%
     left_join(venta, by = c("FechaCorte" = "FechaCorte")) %>%
