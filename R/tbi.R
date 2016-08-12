@@ -68,7 +68,7 @@ tbi_importer_cortes <- function(archivo){
 
   # 2. Limpiar
   header %<>% filter(VentaTotal!=0)
-  clientes %<>% filter(Compra=!0)
+  clientes %<>% filter(Compra!=0)
   vendedor %<>% filter(Venta!=0)
   pagos %<>% filter(Venta!=0)
 
